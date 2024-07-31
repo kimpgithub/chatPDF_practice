@@ -1,0 +1,8 @@
+langchain==0.2.1
+langchain-core==0.2.24
+langchain_openai==0.1.19
+langchain_community==0.2.1
+openai==1.37.1 
+pypdf   
+tiktoken==0.7.0
+cromadb==0.4.15
