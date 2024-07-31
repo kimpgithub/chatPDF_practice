@@ -1,6 +1,4 @@
-# # RetrievalQA 사용
-# from dotenv import load_dotenv
-# load_dotenv()
+# SQLite 설정
 __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -17,13 +15,13 @@ import streamlit as st
 import tempfile
 
 # Chroma DB가 저장된 디렉토리 경로
-persist_directory = './db/chromadb'
+persist_directory = '/app/db/chromadb'  # 절대 경로 사용
 
-#제목
+# 제목
 st.title("ChatPDF")
 st.write("---")
 
-#파일 업로드
+# 파일 업로드
 uploaded_file = st.file_uploader("Choose a file")
 st.write("---")
 
@@ -36,31 +34,30 @@ def pdf_to_document(uploaded_file):
     pages = loader.load_and_split()
     return pages
 
-#업로드 되면 동작하는 코드
+# 업로드 되면 동작하는 코드
 if uploaded_file is not None:
     try:
         pages = pdf_to_document(uploaded_file)
 
-        #Split
+        # Split
         text_splitter = RecursiveCharacterTextSplitter(
-            # Set a really small chunk size, just to show.
-            chunk_size = 1000,
-            chunk_overlap  = 50,
-            length_function = len,
-            is_separator_regex = False,
+            chunk_size=500,  # 더 작은 크기로 조정
+            chunk_overlap=100,  # 더 큰 오버랩 설정
+            length_function=len,
+            is_separator_regex=False,
         )
         texts = text_splitter.split_documents(pages)
 
-        #Embedding
+        # Embedding
         embeddings_model = OpenAIEmbeddings()
 
-        # load it into Chroma
+        # Load into Chroma
         if not os.path.exists(persist_directory):
             chromadb = Chroma.from_documents(
                 texts, 
                 embeddings_model,
-                collection_name = 'esg',
-                persist_directory = persist_directory,
+                collection_name='esg',
+                persist_directory=persist_directory,
             )
         else:
             chromadb = Chroma(
@@ -69,7 +66,7 @@ if uploaded_file is not None:
                 collection_name='esg'
             )
 
-        #Question
+        # Question
         st.header("PDF에게 질문해보세요!!")
         question = st.text_input('질문을 입력하세요')
 
@@ -82,7 +79,14 @@ if uploaded_file is not None:
                                 return_source_documents=True
                             )
                 result = qa_chain({"query": question})
+
+                # 검색 결과 및 원본 문서 표시
+                st.write("검색 결과:")
                 st.write(result["result"])
-                
+
+                st.write("원본 문서:")
+                for doc in result["source_documents"]:
+                    st.write(doc.page_content)
+
     except Exception as e:
         st.error(f"An error occurred: {e}")
