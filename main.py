@@ -15,7 +15,7 @@ import streamlit as st
 import tempfile
 
 # Chroma DB가 저장된 디렉토리 경로
-persist_directory = './db/chromadb'  # 절대 경로 사용
+persist_directory = '/tmp/chromadb'  # 일시적 디렉토리 사용
 
 # 제목
 st.title("ChatPDF")
