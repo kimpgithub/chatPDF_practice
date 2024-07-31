@@ -13,6 +13,7 @@ from langchain.chains import RetrievalQA
 import os
 import streamlit as st
 import tempfile
+import re
 
 # Chroma DB가 저장된 디렉토리 경로
 persist_directory = '/tmp/chromadb'  # 일시적 디렉토리 사용
@@ -34,6 +35,13 @@ def pdf_to_document(uploaded_file):
     pages = loader.load_and_split()
     return pages
 
+def preprocess_text(text):
+    # 불필요한 공백 제거
+    text = re.sub(r'\s+', ' ', text)
+    # 문장 끝에 마침표 추가
+    text = re.sub(r'(?<!\.)\n', '.\n', text)
+    return text
+
 # 업로드 되면 동작하는 코드
 if uploaded_file is not None:
     try:
@@ -48,13 +56,16 @@ if uploaded_file is not None:
         )
         texts = text_splitter.split_documents(pages)
 
+        # 전처리 적용
+        preprocessed_texts = [preprocess_text(text.page_content) for text in texts]
+
         # Embedding
         embeddings_model = OpenAIEmbeddings()
 
         # Load into Chroma
         if not os.path.exists(persist_directory):
             chromadb = Chroma.from_documents(
-                texts, 
+                preprocessed_texts, 
                 embeddings_model,
                 collection_name='esg',
                 persist_directory=persist_directory,
