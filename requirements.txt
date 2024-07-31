@@ -5,5 +5,5 @@ langchain_community==0.2.1
 openai==1.37.1
 pypdf
 tiktoken==0.7.0
-cromad<0.3.3
+cromadb<0.4
 streamlit
