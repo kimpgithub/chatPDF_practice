@@ -5,5 +5,5 @@ langchain_community==0.2.1
 openai==1.37.1
 pypdf
 tiktoken==0.7.0
-chromadb
+chromadb<0.5.0  # 특정 버전 이하로 제한
 streamlit
