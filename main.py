@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+# SQLite 설정
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
+>>>>>>> ee0dd9ac0b2b3af9d5932be19c715fa38691083d
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -8,9 +16,10 @@ from langchain.chains import RetrievalQA
 import os
 import streamlit as st
 import tempfile
+import re
 
 # Chroma DB가 저장된 디렉토리 경로
-persist_directory = './db/chromadb'
+persist_directory = '/tmp/chromadb'  # 일시적 디렉토리 사용
 
 # 제목
 st.title("ChatPDF")
@@ -29,6 +38,17 @@ def pdf_to_document(uploaded_file):
     pages = loader.load_and_split()
     return pages
 
+<<<<<<< HEAD
+=======
+def preprocess_text(text):
+    # 불필요한 공백 제거
+    text = re.sub(r'\s+', ' ', text)
+    # 문장 끝에 마침표 추가
+    text = re.sub(r'(?<!\.)\n', '.\n', text)
+    return text
+
+# 업로드 되면 동작하는 코드
+>>>>>>> ee0dd9ac0b2b3af9d5932be19c715fa38691083d
 if uploaded_file is not None:
     try:
         st.write("파일 업로드 완료. PDF 처리 중...")
@@ -37,14 +57,22 @@ if uploaded_file is not None:
 
         # Split
         text_splitter = RecursiveCharacterTextSplitter(
+<<<<<<< HEAD
             chunk_size = 1000,
             chunk_overlap = 50,
             length_function = len,
             is_separator_regex = False,
+=======
+            chunk_size=500,  # 더 작은 크기로 조정
+            chunk_overlap=100,  # 더 큰 오버랩 설정
+            length_function=len,
+            is_separator_regex=False,
+>>>>>>> ee0dd9ac0b2b3af9d5932be19c715fa38691083d
         )
         texts = text_splitter.split_documents(pages)
         st.write("페이지를 텍스트 청크로 분할 완료.")
 
+<<<<<<< HEAD
         # Embedding
         embeddings_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
         embeddings = embeddings_model.embed_documents([text.page_content for text in texts])
@@ -54,6 +82,18 @@ if uploaded_file is not None:
         if not os.path.exists(persist_directory):
             chromadb = Chroma.from_documents(
                 texts,
+=======
+        # 전처리 적용
+        preprocessed_texts = [preprocess_text(text.page_content) for text in texts]
+
+        # Embedding
+        embeddings_model = OpenAIEmbeddings()
+
+        # Load into Chroma
+        if not os.path.exists(persist_directory):
+            chromadb = Chroma.from_documents(
+                preprocessed_texts, 
+>>>>>>> ee0dd9ac0b2b3af9d5932be19c715fa38691083d
                 embeddings_model,
                 collection_name='esg',
                 persist_directory=persist_directory,
@@ -81,6 +121,7 @@ if uploaded_file is not None:
                     return_source_documents=True
                 )
                 result = qa_chain({"query": question})
+<<<<<<< HEAD
                 st.write("질문에 대한 응답 완료.")
                 st.write(result["result"])
 
@@ -88,5 +129,16 @@ if uploaded_file is not None:
                 st.write("출처 문서:")
                 for doc in result['source_documents']:
                     st.write(doc.page_content)
+=======
+
+                # 검색 결과 및 원본 문서 표시
+                st.write("검색 결과:")
+                st.write(result["result"])
+
+                st.write("원본 문서:")
+                for doc in result["source_documents"]:
+                    st.write(doc.page_content)
+
+>>>>>>> ee0dd9ac0b2b3af9d5932be19c715fa38691083d
     except Exception as e:
         st.error(f"An error occurred: {e}")
